@@ -5,8 +5,12 @@ import (
 	"strings"
 )
 
-func lenAndUpper(a string) (int, string) {
-	return len(a), strings.ToUpper(a)
+func lenAndUpper(a string) (wordLength int, wordUpper string) {
+	wordLength = len(a)
+	wordUpper = strings.ToUpper(a)
+
+	return
+
 }
 func repeat(words ...string) {
 	fmt.Println(words)
