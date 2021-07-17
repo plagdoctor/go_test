@@ -1,24 +1,18 @@
 package main
 
 import (
-	"PlagDoctor/accounts"
+	"PlagDoctor/mydict"
 	"fmt"
-	"log"
 )
 
 //	/home/miumiu/go/src/
 func main() {
-	account := accounts.NewAccount("pepe")
-
-	account.Deposit(100)
-	fmt.Println(account.Owner())
-	fmt.Println(account.CheckBalance())
-
-	fmt.Println(account)
-	err := account.Withdraw(150)
-	//err := account.Withdraw(50)
+	dictionary := mydict.Dictionary{"first": "First word"}
+	definition, err := dictionary.Search("second")
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
+	} else {
+		println(definition)
 	}
-	fmt.Println(account.CheckBalance())
+
 }
