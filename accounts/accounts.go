@@ -1,5 +1,10 @@
 package accounts
 
+import (
+	"errors"
+	"fmt"
+)
+
 // Account struct
 type Account struct {
 	owner   string
@@ -19,4 +24,20 @@ func (a *Account) Deposit(amount int) {
 
 func (a *Account) CheckBalance() int {
 	return a.balance
+}
+
+func (a *Account) Withdraw(amount int) error {
+	if a.balance < amount {
+		return errors.New("can't withdray you are poor")
+	}
+	a.balance -= amount
+	return nil
+}
+
+func (a Account) Owner() string {
+	return a.owner
+}
+
+func (a Account) String() string {
+	return fmt.Sprintln(a.Owner(), "'s accounts. \n Has :", a.CheckBalance())
 }
