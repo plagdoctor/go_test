@@ -1,10 +1,14 @@
 package main
 
-import (
-	"fmt"
-	"strings"
-)
+import "fmt"
 
+type person struct {
+	name    string
+	age     int
+	favFood []string
+}
+
+/*
 func lenAndUpper(a string) (wordLength int, wordUpper string) {
 	defer fmt.Println("done.")
 	wordLength = len(a)
@@ -39,21 +43,15 @@ func canIDrink(age int) bool {
 	return false
 
 }
+*/
+
 func main() {
-	/*
-		fmt.Println("dd")
+	jin := map[string]string{"name": "jin", "age": "20"}
+	for key, value := range jin {
+		fmt.Println(key, value)
+	}
+	favFood := []string{"taco", "ramen"}
+	nico := person{favFood: favFood, name: "nico", age: 18}
+	fmt.Println(nico)
 
-		var name string = "jinyoung"
-		name = "nico"
-
-		fmt.Println(name)
-
-		name_t_lengh, name_t_upper := lenAndUpper(name)
-		fmt.Println(name_t_lengh, name_t_upper)
-		repeat("mike", "jinyoung", "haha", "ilence")
-	*/
-	//superAdd(1, 2, 3, 4, 5, 6)
-
-	println(canIDrink(18))
-	println(canIDrink(21))
 }
