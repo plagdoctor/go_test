@@ -1,43 +1,42 @@
 package main
 
 import (
-	"PlagDoctor/mydict"
+	"errors"
 	"fmt"
+	"net/http"
 )
 
-//	/home/miumiu/go/src/
+var errRequestFailed = errors.New("Request Failed")
+
 func main() {
-	dictionary := mydict.Dictionary{}
-	baseword := "hello"
-	dictionary.Add(baseword, "First")
-	dictionary.Update(baseword, "Second")
+	urls := []string{
+		"https://www.airbnb.com",
+		"https://www.reddit.com",
+	}
 
-	word, _ := dictionary.Search(baseword)
-	fmt.Println(word)
+	var results = make(map[string]string)
+	// or var results = map[string]string{}
 
-	/*
-		dictionary := mydict.Dictionary{"first": "First word"}
-		word := "hello"
-		definition := "Greeting"
-		err := dictionary.Add(word, definition)
+	results["hello"] = "hello"
+
+	for _, url := range urls {
+		result := "ok"
+		err := hitURL(url)
 		if err != nil {
-			fmt.Println(err)
+			result = "failed"
 		}
-		hello, _ := dictionary.Search(word)
-		fmt.Println(hello)
-		err2 := dictionary.Add(word, definition)
-		if err2 != nil {
-			fmt.Println(err2)
-		}
+		results[url] = result
+	}
+	for url, result := range results {
+		fmt.Println(url, result)
+	}
+}
 
-		err3 := dictionary.Delete(word)
-		if err3 != nil {
-			fmt.Println(err3)
-		}
-
-		fmt.Println(err3)
-		hello, _ = dictionary.Search(word)
-
-		fmt.Println(hello)
-	*/
+func hitURL(url string) error {
+	fmt.Println("checking:", url)
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode >= 400 {
+		return errRequestFailed
+	}
+	return nil
 }
