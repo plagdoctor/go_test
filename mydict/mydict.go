@@ -35,6 +35,28 @@ func (d Dictionary) Add(word string, def string) error {
 
 	return nil
 }
+
+func (d Dictionary) Update(word string, def string) error {
+	_, err := d.Search(word)
+
+	/*
+		if err == errNotFound {
+			d[word] = def
+		} else if err == nil {
+			return errWordExists
+		}
+	*/
+
+	switch err {
+	case errNotFound:
+		return errNotFound
+	case nil:
+		d[word] = def
+	}
+
+	return nil
+}
+
 func (d Dictionary) Delete(word string) error {
 	_, err := d.Search(word)
 
