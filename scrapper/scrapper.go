@@ -22,19 +22,40 @@ type extractedJob struct {
 var baseURL string = "https://kr.indeed.com/%EC%B7%A8%EC%97%85?q=python&limit=100"
 
 func main() {
-
+	var jobs []extractedJob
 	pages := getPages(baseURL)
 	fmt.Println(pages)
 	for i := 0; i < pages; i++ {
-		getPage(i)
+		extractedJobs := getPage(i)
+		// ... 하면 하위 값들이 딸려오나봄
+		jobs = append(jobs, extractedJobs...)
 	}
+	writeJobs(jobs)
+	fmt.Println("extract done, ", len(jobs))
 }
 
+func writeJobs(jobs []extractedJob) {
+	file, err := os.Create("jobs.scv")
+	checkErr(err)
+	w := csv.NewWriter(file)
+	defer w.Flush()
+
+	headers := []string{"ID", "Title", "Location"}
+	wErr := w.Write(headers)
+	checkErr(wErr)
+
+	for _, job := range jobs {
+		jobSlice := []string{job.id, job.title, job.location}
+		jwErr := w.Write(jobSlice)
+		checkErr(jwErr)
+	}
+}
 func cleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
 
-func getPage(page int) {
+func getPage(page int) []extractedJob {
+	var jobs []extractedJob
 	pageUrl := baseURL + "&start=" + strconv.Itoa(page*50)
 	fmt.Println("requesting", pageUrl)
 	resp, err := http.Get(pageUrl)
@@ -49,18 +70,16 @@ func getPage(page int) {
 	//searchCards := doc.Find(".mosaic-provider-jobcards")
 	searchCards := doc.Find(".tapItem")
 
-	var records [][]string
-	var oneRecord []string
-
 	searchCards.Each(func(i int, card *goquery.Selection) {
-		oneRecord = extractJob(card)
-		records = append(records, oneRecord)
+		job := extractJob(card)
+		jobs = append(jobs, job)
+
 	})
-	extractAsCsv(records)
+	return jobs
 }
 
 //추출 하기  .class>하위
-func extractJob(card *goquery.Selection) []string {
+func extractJob(card *goquery.Selection) extractedJob {
 
 	link, _ := card.Attr("href")
 	//fmt.Println("link= ", cleanString(link))
@@ -70,11 +89,10 @@ func extractJob(card *goquery.Selection) []string {
 	location := card.Find(".companyLocation").Text()
 	//fmt.Println("location= ", cleanString(location))
 
-	var oneRecord []string
-
-	oneRecord = []string{link, title, location}
-
-	return oneRecord
+	return extractedJob{
+		id:       link,
+		title:    title,
+		location: location}
 }
 
 //csv 파일 생성 리턴할땐 () 로 싸주자
