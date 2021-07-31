@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -13,8 +17,6 @@ type extractedJob struct {
 	id       string
 	title    string
 	location string
-	salary   string
-	summary  string
 }
 
 var baseURL string = "https://kr.indeed.com/%EC%B7%A8%EC%97%85?q=python&limit=100"
@@ -26,6 +28,10 @@ func main() {
 	for i := 0; i < pages; i++ {
 		getPage(i)
 	}
+}
+
+func cleanString(str string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
 
 func getPage(page int) {
@@ -40,19 +46,58 @@ func getPage(page int) {
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	checkErr(err)
 
+	//searchCards := doc.Find(".mosaic-provider-jobcards")
 	searchCards := doc.Find(".tapItem")
 
-	//searchCards := doc.Find(".mosaic-provider-jobcards")
+	var records [][]string
+	var oneRecord []string
+
 	searchCards.Each(func(i int, card *goquery.Selection) {
-		link, _ := card.Attr("href")
-		fmt.Println("link= ", link)
-		title := card.Find(".jobTitle>span").Text()
-		fmt.Println("title= ", title)
-
-		location := card.Find(".companyLocation").Text()
-		fmt.Println("location= ", location)
-
+		oneRecord = extractJob(card)
+		records = append(records, oneRecord)
 	})
+	extractAsCsv(records)
+}
+
+//추출 하기  .class>하위
+func extractJob(card *goquery.Selection) []string {
+
+	link, _ := card.Attr("href")
+	//fmt.Println("link= ", cleanString(link))
+	title := card.Find(".jobTitle>span").Text()
+	//fmt.Println("title= ", cleanString(title))
+
+	location := card.Find(".companyLocation").Text()
+	//fmt.Println("location= ", cleanString(location))
+
+	var oneRecord []string
+
+	oneRecord = []string{link, title, location}
+
+	return oneRecord
+}
+
+//csv 파일 생성 리턴할땐 () 로 싸주자
+func extractAsCsv(records [][]string) {
+
+	var file *os.File
+	var err error
+
+	file, err = os.Open("./output.csv")
+	if err != nil {
+		file, err = os.Create("./output.csv")
+	} else if err == nil {
+		//fmt.Println("title= ", cleanString(title))
+	}
+	defer file.Close()
+
+	// csv writer 생성
+	wr := csv.NewWriter(bufio.NewWriter(file))
+	defer wr.Flush()
+
+	// csv 내용 쓰기
+	wr.WriteAll(records)
+
 }
 
 //페이지 가져오기
