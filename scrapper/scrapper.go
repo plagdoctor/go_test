@@ -1,4 +1,4 @@
-package main
+package scrapper
 
 import (
 	"bufio"
@@ -19,22 +19,23 @@ type extractedJob struct {
 	location string
 }
 
-var baseURL string = "https://kr.indeed.com/%EC%B7%A8%EC%97%85?q=python&limit=50"
+func Scrape(term string) {
 
-func main() {
+	var baseURL string = "https://kr.indeed.com/%EC%B7%A8%EC%97%85?q=" + term + "&limit=50"
 	var jobs []extractedJob
-	c := make(chan []extractedJob)
+	mainC := make(chan []extractedJob)
 	pages := getPages(baseURL)
-	fmt.Println(pages)
+
 	for i := 0; i < pages; i++ {
-		go getPage(i, c)
+		go getPage(i, mainC)
 		// ... 하면 하위 값들이 딸려오나봄
 		//jobs = append(jobs, extractedJobs...)
 	}
 	fmt.Println("done get page: ")
+
 	for i := 0; i < pages; i++ {
 		fmt.Println("appending page: ", i)
-		extractedJobs := <-c
+		extractedJobs := <-mainC
 		jobs = append(jobs, extractedJobs...)
 	}
 	writeJobs(jobs)
@@ -148,7 +149,7 @@ func checkResp(resp *http.Response) {
 }
 
 func writeJobs(jobs []extractedJob) {
-	file, err := os.Create("jobs.scv")
+	file, err := os.Create("jobs2.scv")
 	checkErr(err)
 	w := csv.NewWriter(file)
 	defer w.Flush()
