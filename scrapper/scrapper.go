@@ -64,7 +64,6 @@ func getPage(page int, url string, mainC chan<- []extractedJob) {
 
 	searchCards.Each(func(i int, card *goquery.Selection) {
 		go extractJob(card, c)
-
 	})
 
 	for i := 0; i <= searchCards.Length(); i++ {
@@ -165,6 +164,9 @@ func writeJobs(jobs []extractedJob) {
 		checkErr(jwErr)
 	}
 }
-func cleanString(str string) string {
+func CleanString(str string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
+}
+func CleanString2(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
