@@ -19,43 +19,33 @@ type extractedJob struct {
 	location string
 }
 
-var baseURL string = "https://kr.indeed.com/%EC%B7%A8%EC%97%85?q=python&limit=100"
+var baseURL string = "https://kr.indeed.com/%EC%B7%A8%EC%97%85?q=python&limit=50"
 
 func main() {
 	var jobs []extractedJob
+	c := make(chan []extractedJob)
 	pages := getPages(baseURL)
 	fmt.Println(pages)
 	for i := 0; i < pages; i++ {
-		extractedJobs := getPage(i)
+		go getPage(i, c)
 		// ... 하면 하위 값들이 딸려오나봄
+		//jobs = append(jobs, extractedJobs...)
+	}
+	fmt.Println("done get page: ")
+	for i := 0; i < pages; i++ {
+		fmt.Println("appending page: ", i)
+		extractedJobs := <-c
 		jobs = append(jobs, extractedJobs...)
 	}
 	writeJobs(jobs)
 	fmt.Println("extract done, ", len(jobs))
 }
 
-func writeJobs(jobs []extractedJob) {
-	file, err := os.Create("jobs.scv")
-	checkErr(err)
-	w := csv.NewWriter(file)
-	defer w.Flush()
-
-	headers := []string{"ID", "Title", "Location"}
-	wErr := w.Write(headers)
-	checkErr(wErr)
-
-	for _, job := range jobs {
-		jobSlice := []string{job.id, job.title, job.location}
-		jwErr := w.Write(jobSlice)
-		checkErr(jwErr)
-	}
-}
-func cleanString(str string) string {
-	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
-}
-
-func getPage(page int) []extractedJob {
+func getPage(page int, mainC chan<- []extractedJob) {
 	var jobs []extractedJob
+
+	c := make(chan extractedJob)
+
 	pageUrl := baseURL + "&start=" + strconv.Itoa(page*50)
 	fmt.Println("requesting", pageUrl)
 	resp, err := http.Get(pageUrl)
@@ -71,15 +61,19 @@ func getPage(page int) []extractedJob {
 	searchCards := doc.Find(".tapItem")
 
 	searchCards.Each(func(i int, card *goquery.Selection) {
-		job := extractJob(card)
-		jobs = append(jobs, job)
+		go extractJob(card, c)
 
 	})
-	return jobs
+
+	for i := 0; i <= searchCards.Length(); i++ {
+		job := <-c
+		jobs = append(jobs, job)
+	}
+	mainC <- jobs
 }
 
 //추출 하기  .class>하위
-func extractJob(card *goquery.Selection) extractedJob {
+func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 
 	link, _ := card.Attr("href")
 	//fmt.Println("link= ", cleanString(link))
@@ -89,7 +83,7 @@ func extractJob(card *goquery.Selection) extractedJob {
 	location := card.Find(".companyLocation").Text()
 	//fmt.Println("location= ", cleanString(location))
 
-	return extractedJob{
+	c <- extractedJob{
 		id:       link,
 		title:    title,
 		location: location}
@@ -151,4 +145,24 @@ func checkResp(resp *http.Response) {
 	if resp.StatusCode != 200 {
 		log.Fatalln("request failed with status : %d %s", resp.StatusCode, resp.Status)
 	}
+}
+
+func writeJobs(jobs []extractedJob) {
+	file, err := os.Create("jobs.scv")
+	checkErr(err)
+	w := csv.NewWriter(file)
+	defer w.Flush()
+
+	headers := []string{"ID", "Title", "Location"}
+	wErr := w.Write(headers)
+	checkErr(wErr)
+
+	for _, job := range jobs {
+		jobSlice := []string{job.id, job.title, job.location}
+		jwErr := w.Write(jobSlice)
+		checkErr(jwErr)
+	}
+}
+func cleanString(str string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
