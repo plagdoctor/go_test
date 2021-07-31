@@ -3,5 +3,7 @@
 ---
 
 ### Base url 에 있는 attr 값과 class text 내용을 출력하고, `csv` 로 extract 합니다.
-
+---
 ~아직 잘 모르겠어요ㅠ~
+
+음 csv 로 추출하는건 다른 브랜치로 커밋하자
