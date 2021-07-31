@@ -27,7 +27,7 @@ func Scrape(term string) {
 	pages := getPages(baseURL)
 
 	for i := 0; i < pages; i++ {
-		go getPage(i, mainC)
+		go getPage(i, baseURL, mainC)
 		// ... 하면 하위 값들이 딸려오나봄
 		//jobs = append(jobs, extractedJobs...)
 	}
@@ -42,14 +42,15 @@ func Scrape(term string) {
 	fmt.Println("extract done, ", len(jobs))
 }
 
-func getPage(page int, mainC chan<- []extractedJob) {
+func getPage(page int, url string, mainC chan<- []extractedJob) {
 	var jobs []extractedJob
 
 	c := make(chan extractedJob)
 
-	pageUrl := baseURL + "&start=" + strconv.Itoa(page*50)
-	fmt.Println("requesting", pageUrl)
-	resp, err := http.Get(pageUrl)
+	pageURL := url + "&start=" + strconv.Itoa(page*50)
+	fmt.Println("requesting", pageURL)
+	resp, err := http.Get(pageURL)
+
 	checkErr(err)
 	checkResp(resp)
 
